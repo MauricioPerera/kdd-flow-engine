@@ -8,7 +8,9 @@ export interface TranslationDictionary {
   btnVault: string;
   btnSynthesizeApi: string;
   btnValidateDag: string;
-  btnExportCode: string; btnShareFlow: string; shareCopiedToast: string;
+  btnShareFlow: string;
+  shareCopiedToast: string;
+  btnExportCode: string;
   btnRunSimulation: string;
   btnSimulating: string;
   // WebMCP Status
@@ -81,7 +83,9 @@ export const TRANSLATIONS: Record<Locale, TranslationDictionary> = {
     btnVault: "🔐 Vault",
     btnSynthesizeApi: "✨ Sintetizar Nodo API",
     btnValidateDag: "🛡️ Validar DAG",
-    btnExportCode: "📦 Exportar Código", btnShareFlow: "🔗 Compartilhar", shareCopiedToast: "✓ Link copiado para a área de transferência!", btnShareFlow: "🔗 Compartir", shareCopiedToast: "✓ ¡Enlace copiado al portapapeles!",
+    btnShareFlow: "🔗 Compartir",
+    shareCopiedToast: "✓ ¡Enlace copiado al portapapeles!",
+    btnExportCode: "📦 Exportar Código",
     btnRunSimulation: "▶ Ejecutar Simulación",
     btnSimulating: "⏳ Simulando...",
     webmcpConnected: "WebMCP Conectado (document.modelContext)",
@@ -144,7 +148,9 @@ export const TRANSLATIONS: Record<Locale, TranslationDictionary> = {
     btnVault: "🔐 Vault",
     btnSynthesizeApi: "✨ Synthesize API Node",
     btnValidateDag: "🛡️ Validate DAG",
-    btnExportCode: "📦 Export Code", btnShareFlow: "🔗 Share Flow", shareCopiedToast: "✓ Link copied to clipboard!",
+    btnShareFlow: "🔗 Share Flow",
+    shareCopiedToast: "✓ Link copied to clipboard!",
+    btnExportCode: "📦 Export Code",
     btnRunSimulation: "▶ Run Simulation",
     btnSimulating: "⏳ Simulating...",
     webmcpConnected: "WebMCP Connected (document.modelContext)",
@@ -207,7 +213,9 @@ export const TRANSLATIONS: Record<Locale, TranslationDictionary> = {
     btnVault: "🔐 Cofre",
     btnSynthesizeApi: "✨ Sintetizar Nó de API",
     btnValidateDag: "🛡️ Validar DAG",
-    btnExportCode: "📦 Exportar Código", btnShareFlow: "🔗 Compartilhar", shareCopiedToast: "✓ Link copiado para a área de transferência!", btnShareFlow: "🔗 Compartir", shareCopiedToast: "✓ ¡Enlace copiado al portapapeles!",
+    btnShareFlow: "🔗 Compartilhar",
+    shareCopiedToast: "✓ Link copiado para a área de transferência!",
+    btnExportCode: "📦 Exportar Código",
     btnRunSimulation: "▶ Executar Simulação",
     btnSimulating: "⏳ Simulando...",
     webmcpConnected: "WebMCP Conectado (document.modelContext)",
@@ -254,7 +262,7 @@ export const TRANSLATIONS: Record<Locale, TranslationDictionary> = {
     frozenTestCasesTitle: "Casos de Teste Congelados",
     shaUnsealed: "SHA256: Não selado",
     statusPending: "Pendente",
-    statusPass: "✓ APROVADO",
+    statusPass: "✓ APROBADO",
     statusFail: "✕ FALHOU",
     catTrigger: "Disparadores",
     catAi: "Inteligência Artificial",
