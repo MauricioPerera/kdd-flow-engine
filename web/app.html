@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KDD AI-First Flow Engine (fastwebmcp)</title>
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="./index.html" class="btn secondary" style="text-decoration:none; padding:4px 8px; margin-right:8px; font-size:0.8rem;" title="Volver a la Página Principal">🏠 Inicio</a><div class="logo">
+        <span style="font-size: 1.3rem;">⚡</span> KDD Flow Engine
+      </div>
+      <input type="text" id="workflow-title-input" class="workflow-title-input" value="AI Workflow" />
+    </div>
+
+    <div class="header-actions">
+      <!-- Language Selector -->
+      <select id="lang-selector" class="input-control" style="width: auto; padding: 4px 8px; font-weight: 600; background: var(--bg-card); cursor: pointer;">
+        <option value="es" selected>🇪🇸 Español</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="pt">🇧🇷 Português</option>
+      </select>
+
+      <div id="webmcp-status-badge" class="webmcp-badge fallback">
+        <span class="dot warn"></span> Initializing fastwebmcp...
+      </div>
+      <button id="btn-open-kdd-gate" class="btn secondary" title="Deterministic KDD Frozen Oracle Acceptance Gate">
+        <span id="label-btn-kdd-gate">🧪 KDD Gate</span>
+      </button>
+      <button id="btn-open-vault" class="btn secondary" title="Zero-Knowledge Local Credentials Vault">
+        <span id="label-btn-vault">🔐 Vault</span>
+      </button>
+      <button id="btn-add-api-node" class="btn secondary" title="Synthesize custom node from API documentation">
+        <span id="label-btn-api">✨ Sintetizar Nodo API</span>
+      </button>
+      <button id="btn-validate" class="btn secondary" title="Run KDD Gate Verification">
+        <span id="label-btn-validate">🛡️ Validar DAG</span>
+      </button>
+      <button id="btn-share-flow" class="btn secondary" title="Generate shareable custom URL"><span id="label-btn-share">🔗 Compartir</span></button><button id="btn-export" class="btn secondary" title="Synthesize target code & test oracles">
+        <span id="label-btn-export">📦 Exportar Código</span>
+      </button>
+      <button id="btn-run" class="btn primary" title="Run step-by-step in-memory execution">
+        <span id="label-btn-run">▶ Ejecutar Simulación</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- App Body -->
+  <main class="app-body">
+    <!-- Left Sidebar: Node Palette -->
+    <aside class="sidebar-palette">
+      <div id="palette-header-title" class="palette-header">Biblioteca de Nodos</div>
+      <div id="node-palette" class="palette-list"></div>
+    </aside>
+
+    <!-- Center: Interactive Flow Canvas -->
+    <section class="canvas-wrapper">
+      <div id="canvas-container" class="canvas-grid"></div>
+    </section>
+
+    <!-- Right Sidebar: Inspector -->
+    <aside class="sidebar-inspector">
+      <div id="inspector-header-title" class="inspector-header-title">Inspector del Nodo</div>
+      <div id="inspector-content" class="inspector-content"></div>
+    </aside>
+  </main>
+
+  <!-- Modal: Generated Code & Test Oracles -->
+  <div id="code-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-tabs">
+          <button id="tab-ts" class="tab-btn active">TypeScript (Node.js)</button>
+          <button id="tab-py" class="tab-btn">Python (asyncio)</button><button id="tab-php" class="tab-btn">PHP 8.2+</button><button id="tab-go" class="tab-btn">Go</button>
+        </div>
+        <button id="btn-close-modal" class="btn secondary">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <h4 id="code-modal-source-label">Implementación Sintetizada</h4>
+        <pre id="code-source" class="code-block"></pre>
+        <h4 id="code-modal-test-label">Oráculo de Pruebas Congelado</h4>
+        <pre id="code-test" class="code-block"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Synthesize Node from API Doc -->
+  <div id="api-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="height: auto; max-height: 90vh;">
+      <div class="modal-header">
+        <h3 id="api-modal-title">✨ Sintetizar Nodo Dinámico desde Documentación de API</h3>
+        <button id="btn-close-api-modal" class="btn secondary">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <p id="api-modal-desc" style="color: var(--text-muted); font-size: 0.85rem;">
+          Pega documentación de API, cURL o especificación OpenAPI. El motor de IA sintetiza un nodo tipado al instante.
+        </p>
+        <div class="form-group">
+          <label id="label-api-service-name">Nombre del Servicio (ej. Stripe, WhatsApp, GitHub)</label>
+          <input type="text" id="api-service-name" class="input-control" value="Stripe" />
+        </div>
+        <div class="form-group">
+          <label id="label-api-op-name">Operación (ej. create_charge, send_message)</label>
+          <input type="text" id="api-op-name" class="input-control" value="create_charge" />
+        </div>
+        <div class="form-group">
+          <label id="label-api-endpoint-url">URL del Endpoint</label>
+          <input type="text" id="api-endpoint-url" class="input-control font-mono" value="https://api.stripe.com/v1/charges" />
+        </div>
+        <div class="form-group">
+          <label id="label-api-method">Método HTTP</label>
+          <select id="api-method" class="input-control">
+            <option value="POST" selected>POST</option>
+            <option value="GET">GET</option>
+            <option value="PUT">PUT</option>
+            <option value="DELETE">DELETE</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label id="label-api-doc-text">Documentación de la API / Fragmento cURL</label>
+          <textarea id="api-doc-text" class="input-control font-mono" rows="4">curl https://api.stripe.com/v1/charges \
+  -u sk_test_...: \
+  -d amount=2000 \
+  -d currency=usd \
+  -d source=tok_visa \
+  -d description="Charge for customer@example.com"</textarea>
+        </div>
+        <button id="btn-create-api-node" class="btn primary" style="align-self: flex-end; margin-top: 10px;">
+          <span id="label-btn-create-api">✨ Sintetizar y Añadir al Canvas</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Zero-Knowledge Credentials Vault -->
+  <div id="vault-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="height: auto; max-height: 90vh;">
+      <div class="modal-header">
+        <h3 id="vault-modal-title">🔐 Bóveda Local de Credenciales de Conocimiento Cero</h3>
+        <button id="btn-close-vault-modal" class="btn secondary">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <p id="vault-modal-desc" style="color: var(--text-muted); font-size: 0.85rem;">
+          Las credenciales se guardan exclusivamente en la memoria local de tu navegador. El agente de IA solo recibe referencias ciegas ($vault:CLAVE) y nunca puede leer tus secretos reales.
+        </p>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-top: 8px;">
+          <h4 id="vault-add-secret-title" style="font-size: 0.85rem; margin-bottom: 8px;">Agregar / Actualizar Clave Secreta</h4>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <input type="text" id="vault-key-input" class="input-control font-mono" placeholder="NOMBRE_CLAVE (ej. STRIPE_SECRET_KEY)" style="flex: 1;" />
+            <input type="password" id="vault-val-input" class="input-control font-mono" placeholder="Valor Secreto (ej. sk_test_...)" style="flex: 1;" />
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="vault-desc-input" class="input-control" placeholder="Descripción (ej. Clave Secreta de Pruebas Stripe)" style="flex: 2;" />
+            <button id="btn-save-vault-secret" class="btn primary" style="flex: 1;">
+              <span id="label-btn-save-vault">💾 Guardar en Bóveda</span>
+            </button>
+          </div>
+        </div>
+
+        <h4 id="vault-active-secrets-title" style="font-size: 0.85rem; margin-top: 12px;">Secretos Locales Activos</h4>
+        <div id="vault-keys-list" style="display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto;"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border);">
+          <span id="vault-security-notice" style="font-size: 0.75rem; color: #34d399;">🔒 100% en tu máquina. Nunca se envía a bases de datos remotas ni al chat con la IA.</span>
+          <button id="btn-export-dotenv" class="btn secondary">
+            <span id="label-btn-export-dotenv">📥 Exportar Archivo .env</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: KDD Frozen Oracle Acceptance Gate -->
+  <div id="kdd-gate-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="height: 650px;">
+      <div class="modal-header">
+        <div>
+          <h3 id="kdd-gate-modal-title">🧪 KDD Frozen Oracle Acceptance Gate</h3>
+          <span id="kdd-gate-sha-badge" style="font-size: 0.75rem; color: #a5b4fc;" class="font-mono">SHA256: Sin sellar</span>
+        </div>
+        <button id="btn-close-gate-modal" class="btn secondary">Cerrar</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <p id="kdd-gate-modal-desc" style="color: var(--text-muted); font-size: 0.85rem;">
+            Verificación determinista: Toda modificación del flujo debe satisfacer el 100% de los casos de prueba congelados.
+          </p>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-export-kdd-contract" class="btn secondary">
+              <span id="label-btn-export-contract">📜 Exportar Contrato KDD</span>
+            </button>
+            <button id="btn-execute-kdd-gate" class="btn primary">
+              <span id="label-btn-run-gate">▶ Ejecutar KDD Gate</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="kdd-gate-verdict-banner" style="display: none; padding: 10px 14px; border-radius: 6px; font-size: 0.85rem; font-weight: 600;"></div>
+
+        <h4 id="kdd-frozen-test-cases-title">Casos de Prueba Congelados</h4>
+        <div id="kdd-test-cases-list" style="display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.ts"></script>
+</body>
+</html>
