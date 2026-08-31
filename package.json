@@ -1,0 +1,26 @@
+{
+  "name": "kdd-flow-engine",
+  "version": "1.0.0",
+  "description": "AI-First workflow and automation engine with KDD governance and fastwebmcp integration",
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "scripts": {
+    "dev": "vite web",
+    "build:web": "vite build web",
+    "build": "tsc -p tsconfig.json",
+    "test": "tsc -p tsconfig.json && node --test dist/tests_ts/**/*.test.js",
+    "test:e2e": "tsc -p tsconfig.json && node --test dist/tests_ts/e2e_*.test.js && python -m unittest tests/test_kdd_gates_e2e.py",
+    "test:kdd": "python scripts/validate_contracts.py knowledge/contracts && python scripts/validate_okf.py knowledge",
+    "validate": "npm run test && npm run test:e2e && npm run test:kdd"
+  },
+  "dependencies": {
+    "fastwebmcp": "file:vendor/fastwebmcp",
+    "zod": "^4.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.2.0"
+  }
+}
