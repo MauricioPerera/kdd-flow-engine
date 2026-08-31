@@ -1,19 +1,35 @@
-import {
-  WorkflowGraph,
-  WorkflowExecutionResult,
-  NodeExecutionLog,
-} from "../schema/workflow.js";
-import { validateDAG } from "../validator/dag.js";
+import { WorkflowGraph, WorkflowNode, WorkflowEdge } from "../schema/workflow.js";
+import { validateDAG, ValidationResult } from "../validator/dag.js";
 import { DynamicNodeRegistry } from "../nodes/dynamic.js";
 import { CredentialVault } from "../vault/vault.js";
 
-export type StepCallback = (log: NodeExecutionLog) => void;
+export interface NodeExecutionLog {
+  nodeId: string;
+  nodeType: string;
+  label: string;
+  status: "pending" | "running" | "success" | "error";
+  startedAt: number;
+  finishedAt?: number;
+  durationMs?: number;
+  inputs?: Record<string, any>;
+  outputs?: Record<string, any>;
+  error?: string;
+}
+
+export interface WorkflowExecutionResult {
+  workflowId: string;
+  status: "completed" | "failed";
+  logs: NodeExecutionLog[];
+  finalOutputs: Record<string, any>;
+  totalDurationMs: number;
+  error?: string;
+}
 
 export class WorkflowEngine {
-  private onStepListeners: StepCallback[] = [];
+  private onStepListeners: Array<(log: NodeExecutionLog) => void> = [];
 
-  public onStep(callback: StepCallback) {
-    this.onStepListeners.push(callback);
+  public onStep(listener: (log: NodeExecutionLog) => void) {
+    this.onStepListeners.push(listener);
   }
 
   public async execute(
@@ -22,32 +38,32 @@ export class WorkflowEngine {
   ): Promise<WorkflowExecutionResult> {
     const startTime = Date.now();
     const validation = validateDAG(graph);
-    const vault = CredentialVault.getInstance();
 
     if (!validation.valid) {
-      const errorMsg = validation.errors.map((e) => `[${e.code}] ${e.message}`).join("; ");
+      const errorMsg = `Invalid workflow graph: ${validation.errors.map((e) => e.message).join("; ")}`;
       return {
         workflowId: graph.id,
         status: "failed",
         logs: [],
         finalOutputs: {},
-        totalDurationMs: Date.now() - startTime,
-        error: `Invalid DAG: ${errorMsg}`,
+        totalDurationMs: 0,
+        error: errorMsg,
       };
     }
 
     const nodeOutputs = new Map<string, Record<string, any>>();
     const logs: NodeExecutionLog[] = [];
     const nodeMap = new Map(graph.nodes.map((n) => [n.id, n]));
+    const incomingEdges = new Map<string, WorkflowEdge[]>();
 
-    // Ingoing edges per node
-    const incomingEdges = new Map<string, typeof graph.edges>();
     for (const node of graph.nodes) {
       incomingEdges.set(node.id, []);
     }
     for (const edge of graph.edges) {
       incomingEdges.get(edge.targetNodeId)?.push(edge);
     }
+
+    const vault = CredentialVault.getInstance();
 
     for (const nodeId of validation.topologicalOrder) {
       const node = nodeMap.get(nodeId);
@@ -56,6 +72,8 @@ export class WorkflowEngine {
       const nodeStart = Date.now();
       const nodeLog: NodeExecutionLog = {
         nodeId,
+        nodeType: node.type,
+        label: node.label,
         status: "running",
         startedAt: nodeStart,
         inputs: {},
@@ -140,13 +158,13 @@ export class WorkflowEngine {
       try {
         listener(log);
       } catch {
-        // ignore callback errors
+        // ignore listener errors
       }
     }
   }
 
   private async executeNode(
-    node: WorkflowGraph["nodes"][0],
+    node: WorkflowNode,
     inputs: Record<string, any>
   ): Promise<Record<string, any>> {
     // Dynamic API node
@@ -197,6 +215,44 @@ export class WorkflowEngine {
         };
       }
 
+      case "agent_handoff": {
+        const task = String(inputs.task || JSON.stringify(inputs));
+        const role = node.config.subagentRole || "Specialized Subagent";
+        const model = node.config.targetModel || "claude-3-7-sonnet";
+        return {
+          subagentResult: `[Subagent: ${role}] Completed task: "${task.substring(0, 60)}..." using ${model}`,
+          handoffStatus: "delegation_completed",
+          role,
+        };
+      }
+
+      case "mcp_client_call": {
+        const serverName = node.config.serverName || "remote-mcp";
+        const toolName = node.config.toolName || "execute_tool";
+        const args = inputs.arguments || inputs;
+        return {
+          result: {
+            mcpServer: serverName,
+            toolCalled: toolName,
+            transport: node.config.transport || "sse",
+            arguments: args,
+            output: `[MCP Output from ${serverName}/${toolName}] Success.`,
+          },
+          isError: false,
+        };
+      }
+
+      case "mcp_server_tool": {
+        const exposedName = node.config.exposedToolName || "exposed_flow_tool";
+        return {
+          toolResponse: {
+            content: [{ type: "text", text: `[MCP Server Tool: ${exposedName}] Workflow execution payload processed.` }],
+            isError: false,
+            processedData: inputs,
+          },
+        };
+      }
+
       case "ai_router": {
         const routes = node.config.routes || ["route_a", "route_b"];
         const inputStr = String(JSON.stringify(inputs.input || ""));
@@ -210,17 +266,19 @@ export class WorkflowEngine {
       case "ai_extractor": {
         const text = String(inputs.text || "");
         return {
-          data: {
-            extractedText: text,
-            parsed: true,
-            timestamp: Date.now(),
+          extracted: {
+            name: "John Doe",
+            email: "john@example.com",
+            amount: 150,
+            rawText: text,
           },
+          success: true,
         };
       }
 
       case "http_request": {
         return {
-          response: {
+          data: {
             status: "ok",
             mocked: true,
             url: node.config.url,
@@ -250,24 +308,28 @@ export class WorkflowEngine {
       }
 
       case "data_transform": {
+        const source = inputs.source || inputs;
         const mappings = node.config.mappings || {};
-        const result: Record<string, any> = {};
-        const input = inputs.input || inputs;
-        for (const [key, expr] of Object.entries(mappings)) {
-          try {
-            const fn = new Function("input", "inputs", `return (${expr});`);
-            result[key] = fn(input, inputs);
-          } catch {
-            result[key] = expr;
+        const transformed: Record<string, any> = {};
+
+        for (const [targetKey, sourcePath] of Object.entries(mappings)) {
+          if (typeof sourcePath === "string" && sourcePath.startsWith("source.")) {
+            const prop = sourcePath.replace("source.", "");
+            transformed[targetKey] = source?.[prop] ?? null;
+          } else {
+            transformed[targetKey] = sourcePath;
           }
         }
-        return { output: result };
+
+        return {
+          transformed: Object.keys(transformed).length > 0 ? transformed : { ...source, mapped: true },
+        };
       }
 
       case "iterator": {
-        const items = Array.isArray(inputs.items) ? inputs.items : [inputs.items];
+        const items = Array.isArray(inputs.items) ? inputs.items : [inputs.items || "item_1"];
         return {
-          item: items[0] || null,
+          item: items[0],
           index: 0,
           total: items.length,
         };
@@ -283,7 +345,9 @@ export class WorkflowEngine {
       }
 
       default:
-        return { result: inputs };
+        return {
+          result: inputs,
+        };
     }
   }
 }

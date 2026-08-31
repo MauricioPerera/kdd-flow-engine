@@ -5,6 +5,7 @@ Bienvenido a la base de conocimiento y gobernanza de **KDD Flow Engine**, una pl
 ## Especificaciones y Arquitectura (OKF)
 - [Workflow Schema and Graph Representation](./workflow_schema.md) — Definicion del modelo de grafo, puertos y tipos de nodos.
 - [Node Protocol and Standard Node Catalog](./node_protocol.md) — Protocolo para diseno y ejecucion de nodos de IA, control de flujo e integraciones.
+- [MCP Ecosystem & Multi-Agent Orchestration in Workflows](./mcp_multiagent_orchestration.md) — Orquestacion de clientes y servidores MCP y delegacion entre subagentes.
 - [Zero-Backend Shareable Workflow URLs](./shareable_workflow_urls.md) — Serializacion y comparticion de flujos via URL sin base de datos.
 - [Universal AI Specification Manifest (Language-Agnostic IR)](./universal_specification_manifest.md) — Paquete de especificacion semantica universal para sintesis en cualquier lenguaje arbitrario.
 - [KDD Workflow Acceptance Contracts and Frozen Oracles](./workflow_acceptance_contracts.md) — Gobernanza determinista mediante oraculos congelados y sellados criptograficos.
