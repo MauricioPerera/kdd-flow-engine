@@ -6,6 +6,7 @@ import { DynamicNodeRegistry } from "../../src/nodes/dynamic.js";
 import { CredentialVault } from "../../src/vault/vault.js";
 import { runFrozenOracleGate, generateKddContractMarkdown } from "../../src/oracle/evaluator.js";
 import { getLocale, setLocale, Locale, t } from "../../src/i18n/translations.js";
+import { serializeWorkflowToUrl } from "../../src/sharing/url_serializer.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const canvas = new FlowCanvas("canvas-container");
@@ -23,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const elVault = document.getElementById("label-btn-vault"); if (elVault) elVault.innerText = tr.btnVault;
     const elApi = document.getElementById("label-btn-api"); if (elApi) elApi.innerText = tr.btnSynthesizeApi;
     const elVal = document.getElementById("label-btn-validate"); if (elVal) elVal.innerText = tr.btnValidateDag;
+    const elShare = document.getElementById("label-btn-share"); if (elShare) elShare.innerText = tr.btnShareFlow;
     const elExp = document.getElementById("label-btn-export"); if (elExp) elExp.innerText = tr.btnExportCode;
     const elRun = document.getElementById("label-btn-run"); if (elRun) elRun.innerText = tr.btnRunSimulation;
 
@@ -130,6 +132,24 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(`✅ KDD Gate Validation PASSED!\nTopological Order: ${val.topologicalOrder.join(" -> ")}`);
     } else {
       alert(`❌ KDD Validation FAILED:\n` + val.errors.map((e) => `- [${e.code}] ${e.message}`).join("\n"));
+    }
+  });
+
+  // Share Flow Handler
+  document.getElementById("btn-share-flow")?.addEventListener("click", async () => {
+    const tr = t();
+    const graph = appState.store.getGraph();
+    const shareUrl = serializeWorkflowToUrl(graph, window.location.href);
+
+    // Update browser URL without reloading
+    window.history.replaceState(null, "", shareUrl);
+
+    // Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert(`${tr.shareCopiedToast}\n\n${shareUrl}`);
+    } catch {
+      prompt("Copy your shareable workflow URL:", shareUrl);
     }
   });
 

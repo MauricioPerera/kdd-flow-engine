@@ -24,6 +24,10 @@ import {
   buildWorkflowSpecificationManifest,
   WorkflowSpecificationManifest,
 } from "../schema/specification_manifest.js";
+import {
+  serializeWorkflowToUrl,
+  deserializeWorkflowFromUrl,
+} from "../sharing/url_serializer.js";
 
 export interface FlowStore {
   graph: WorkflowGraph;
@@ -407,7 +411,26 @@ export function registerFlowWebMcpTools(store: FlowStore) {
     },
   });
 
-  // 10. Tool: get_complete_workflow_specification (Universal AI Specification Package)
+  // 10. Tool: generate_shareable_workflow_url
+  registerTool({
+    name: "generate_shareable_workflow_url",
+    description: "Serializes the current workflow graph into a standalone, privacy-safe, shareable URL hash. Secrets are excluded.",
+    inputSchema: z.object({
+      baseUrl: z.string().optional().default("https://mauricioperera.github.io/kdd-flow-engine/").describe("Base URL of the deployment"),
+    }),
+    execute: async ({ baseUrl }) => {
+      const graph = store.getGraph();
+      const url = serializeWorkflowToUrl(graph, baseUrl);
+      return {
+        shareableUrl: url,
+        workflowId: graph.id,
+        workflowName: graph.name,
+        nodeCount: graph.nodes.length,
+      };
+    },
+  });
+
+  // 11. Tool: get_complete_workflow_specification
   registerTool({
     name: "get_complete_workflow_specification",
     description: "Returns the complete, self-contained, language-agnostic functional specification manifest of the workflow. Contains all topological steps, port bindings, dynamic API schemas, opaque vault references, and frozen test oracles so an AI agent can synthesize production code in ANY target language (Elixir, Rust, C#, Zig, Solidity, Ruby, COBOL, etc.).",
@@ -421,7 +444,7 @@ export function registerFlowWebMcpTools(store: FlowStore) {
     },
   });
 
-  // 11. Tool: export_kdd_workflow_contract
+  // 12. Tool: export_kdd_workflow_contract
   registerTool({
     name: "export_kdd_workflow_contract",
     description: "Generates the official KDD Task Contract markdown (.workflow.contract.md) with frozen oracle and sha256 seal.",
@@ -439,7 +462,7 @@ export function registerFlowWebMcpTools(store: FlowStore) {
     },
   });
 
-  // 12. Tool: get_workflow_graph
+  // 13. Tool: get_workflow_graph
   registerTool({
     name: "get_workflow_graph",
     description: "Returns the complete current workflow graph specification, node count, contract status, and DAG validation status.",
@@ -458,7 +481,7 @@ export function registerFlowWebMcpTools(store: FlowStore) {
     },
   });
 
-  // 13. Tool: validate_workflow
+  // 14. Tool: validate_workflow
   registerTool({
     name: "validate_workflow",
     description: "Runs deterministic KDD verification over the current workflow DAG.",
@@ -470,7 +493,7 @@ export function registerFlowWebMcpTools(store: FlowStore) {
     },
   });
 
-  // 14. Tool: simulate_execution
+  // 15. Tool: simulate_execution
   registerTool({
     name: "simulate_execution",
     description: "Runs the workflow engine in simulation mode, returning step-by-step trace and final outputs.",
@@ -485,7 +508,7 @@ export function registerFlowWebMcpTools(store: FlowStore) {
     },
   });
 
-  // 15. Tool: export_code
+  // 16. Tool: export_code
   registerTool({
     name: "export_code",
     description: "Synthesizes executable target code (TypeScript, Python, PHP, or Go) and test oracles from the flow specification.",

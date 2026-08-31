@@ -8,7 +8,7 @@ export interface TranslationDictionary {
   btnVault: string;
   btnSynthesizeApi: string;
   btnValidateDag: string;
-  btnExportCode: string;
+  btnExportCode: string; btnShareFlow: string; shareCopiedToast: string;
   btnRunSimulation: string;
   btnSimulating: string;
   // WebMCP Status
@@ -81,7 +81,7 @@ export const TRANSLATIONS: Record<Locale, TranslationDictionary> = {
     btnVault: "🔐 Vault",
     btnSynthesizeApi: "✨ Sintetizar Nodo API",
     btnValidateDag: "🛡️ Validar DAG",
-    btnExportCode: "📦 Exportar Código",
+    btnExportCode: "📦 Exportar Código", btnShareFlow: "🔗 Compartilhar", shareCopiedToast: "✓ Link copiado para a área de transferência!", btnShareFlow: "🔗 Compartir", shareCopiedToast: "✓ ¡Enlace copiado al portapapeles!",
     btnRunSimulation: "▶ Ejecutar Simulación",
     btnSimulating: "⏳ Simulando...",
     webmcpConnected: "WebMCP Conectado (document.modelContext)",
@@ -144,7 +144,7 @@ export const TRANSLATIONS: Record<Locale, TranslationDictionary> = {
     btnVault: "🔐 Vault",
     btnSynthesizeApi: "✨ Synthesize API Node",
     btnValidateDag: "🛡️ Validate DAG",
-    btnExportCode: "📦 Export Code",
+    btnExportCode: "📦 Export Code", btnShareFlow: "🔗 Share Flow", shareCopiedToast: "✓ Link copied to clipboard!",
     btnRunSimulation: "▶ Run Simulation",
     btnSimulating: "⏳ Simulating...",
     webmcpConnected: "WebMCP Connected (document.modelContext)",
@@ -207,7 +207,7 @@ export const TRANSLATIONS: Record<Locale, TranslationDictionary> = {
     btnVault: "🔐 Cofre",
     btnSynthesizeApi: "✨ Sintetizar Nó de API",
     btnValidateDag: "🛡️ Validar DAG",
-    btnExportCode: "📦 Exportar Código",
+    btnExportCode: "📦 Exportar Código", btnShareFlow: "🔗 Compartilhar", shareCopiedToast: "✓ Link copiado para a área de transferência!", btnShareFlow: "🔗 Compartir", shareCopiedToast: "✓ ¡Enlace copiado al portapapeles!",
     btnRunSimulation: "▶ Executar Simulação",
     btnSimulating: "⏳ Simulando...",
     webmcpConnected: "WebMCP Conectado (document.modelContext)",
