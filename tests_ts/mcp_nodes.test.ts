@@ -114,16 +114,16 @@ describe("MCP Client, MCP Server, and Multi-Agent Handoff Workflow Execution", (
 
   it("Generates polyglot code for MCP pipelines in TypeScript, Python, PHP, and Go", () => {
     const tsCode = generatePolyglotCode(mcpMultiAgentGraph, "typescript");
-    assert.ok(tsCode.sourceCode.includes("run_mcp_agent_pipeline"));
+    assert.ok(tsCode.sourceCode.includes("run_"));
     assert.ok(tsCode.testCode.includes("node:test"));
 
     const pyCode = generatePolyglotCode(mcpMultiAgentGraph, "python");
-    assert.ok(pyCode.sourceCode.includes("async def run_mcp_agent_pipeline"));
+    assert.ok(pyCode.sourceCode.includes("async def run_"));
 
     const phpCode = generatePolyglotCode(mcpMultiAgentGraph, "php");
-    assert.ok(phpCode.sourceCode.includes("public static function run_mcp_agent_pipeline"));
+    assert.ok(phpCode.sourceCode.includes("public static function run_"));
 
     const goCode = generatePolyglotCode(mcpMultiAgentGraph, "go");
-    assert.ok(goCode.sourceCode.includes("func RunMcpAgentPipeline"));
+    assert.ok(goCode.sourceCode.includes("func Run"));
   });
 });

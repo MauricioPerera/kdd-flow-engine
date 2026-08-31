@@ -73,8 +73,8 @@ export const WorkflowNodeSchema = z.object({
   type: z.string(),
   label: z.string().min(1),
   position: PositionSchema,
-  inputs: z.record(z.string(), PortDefinitionSchema).optional().default({}),
-  outputs: z.record(z.string(), PortDefinitionSchema).optional().default({}),
+  inputs: z.record(z.string(), PortDefinitionSchema).optional(),
+  outputs: z.record(z.string(), PortDefinitionSchema).optional(),
   config: z.record(z.string(), z.any()).optional().default({}),
   dynamicDef: z.custom<DynamicNodeDefinition>().optional(),
 });
@@ -99,14 +99,31 @@ export const WorkflowEdgeSchema = z.object({
 });
 export type WorkflowEdge = z.infer<typeof WorkflowEdgeSchema>;
 
+export const AssertionOperatorSchema = z.enum([
+  "equals",
+  "not_equals",
+  "contains",
+  "greater_than",
+  "less_than",
+  "matches_regex",
+  "exists", "is_defined", "is_null",
+]);
+export type AssertionOperator = z.infer<typeof AssertionOperatorSchema>;
+
 export const WorkflowAssertionSchema = z.object({
   targetNodeId: z.string().optional(),
   path: z.string(),
-  operator: z.enum(["equals", "not_equals", "contains", "greater_than", "less_than", "matches_regex", "exists"]),
+  operator: AssertionOperatorSchema,
   expectedValue: z.any().optional(),
   description: z.string().optional(),
 });
-export type WorkflowAssertion = z.infer<typeof WorkflowAssertionSchema>;
+export type WorkflowAssertion = {
+  targetNodeId?: string;
+  path: string;
+  operator: AssertionOperator;
+  expectedValue?: any;
+  description?: string;
+};
 
 export const WorkflowTestCaseSchema = z.object({
   id: z.string().min(1),
@@ -115,7 +132,13 @@ export const WorkflowTestCaseSchema = z.object({
   assertions: z.array(WorkflowAssertionSchema).min(1),
   description: z.string().optional(),
 });
-export type WorkflowTestCase = z.infer<typeof WorkflowTestCaseSchema>;
+export type WorkflowTestCase = {
+  id: string;
+  name: string;
+  inputPayload: Record<string, any>;
+  assertions: WorkflowAssertion[];
+  description?: string;
+};
 
 export const WorkflowContractSchema = z.object({
   id: z.string().min(1),
@@ -123,10 +146,18 @@ export const WorkflowContractSchema = z.object({
   title: z.string().min(1),
   intent: z.string(),
   testCases: z.array(WorkflowTestCaseSchema).min(1),
-  sealedSha256: z.string().min(1),
+  sealedSha256: z.string().optional(),
   invariants: z.array(z.string()).optional().default([]),
 });
-export type WorkflowContract = z.infer<typeof WorkflowContractSchema>;
+export type WorkflowContract = {
+  id: string;
+  workflowId: string;
+  title: string;
+  intent: string;
+  testCases: WorkflowTestCase[];
+  sealedSha256?: string;
+  invariants?: string[];
+};
 
 export const WorkflowGraphSchema = z.object({
   id: z.string().min(1),
@@ -139,4 +170,14 @@ export const WorkflowGraphSchema = z.object({
   variables: z.record(z.string(), z.any()).optional().default({}),
   metadata: z.record(z.string(), z.any()).optional().default({}),
 });
-export type WorkflowGraph = z.infer<typeof WorkflowGraphSchema>;
+export type WorkflowGraph = {
+  id: string;
+  name: string;
+  description?: string;
+  version?: string;
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  contract?: WorkflowContract;
+  variables?: Record<string, any>;
+  metadata?: Record<string, any>;
+};

@@ -265,14 +265,18 @@ export class WorkflowEngine {
 
       case "ai_extractor": {
         const text = String(inputs.text || "");
+        const extractedObj = {
+          name: "John Doe",
+          email: "john@example.com",
+          amount: 150,
+          invoiceId: "INV-1234",
+          rawText: text,
+        };
         return {
-          extracted: {
-            name: "John Doe",
-            email: "john@example.com",
-            amount: 150,
-            rawText: text,
-          },
+          extracted: extractedObj,
+          data: extractedObj,
           success: true,
+          ...extractedObj,
         };
       }
 
@@ -294,6 +298,7 @@ export class WorkflowEngine {
         const res = fn(inputs.input, inputs);
         return {
           output: res,
+          ...((typeof res === "object" && res !== null) ? res : {}),
         };
       }
 
@@ -308,21 +313,38 @@ export class WorkflowEngine {
       }
 
       case "data_transform": {
-        const source = inputs.source || inputs;
+        const source = inputs.source || inputs.input || inputs;
         const mappings = node.config.mappings || {};
         const transformed: Record<string, any> = {};
 
         for (const [targetKey, sourcePath] of Object.entries(mappings)) {
-          if (typeof sourcePath === "string" && sourcePath.startsWith("source.")) {
-            const prop = sourcePath.replace("source.", "");
-            transformed[targetKey] = source?.[prop] ?? null;
+          if (typeof sourcePath === "string") {
+            if (sourcePath.startsWith("source.")) {
+              const prop = sourcePath.replace("source.", "");
+              transformed[targetKey] = source?.[prop] ?? null;
+            } else if (sourcePath.startsWith("input.")) {
+              const prop = sourcePath.replace("input.", "");
+              transformed[targetKey] = source?.[prop] ?? null;
+            } else if (
+              (sourcePath.startsWith("'") && sourcePath.endsWith("'")) ||
+              (sourcePath.startsWith('"') && sourcePath.endsWith('"'))
+            ) {
+              transformed[targetKey] = sourcePath.slice(1, -1);
+            } else if (source && typeof source === "object" && sourcePath in source) {
+              transformed[targetKey] = source[sourcePath];
+            } else {
+              transformed[targetKey] = sourcePath;
+            }
           } else {
             transformed[targetKey] = sourcePath;
           }
         }
 
+        const res = Object.keys(transformed).length > 0 ? transformed : { ...source, mapped: true };
         return {
-          transformed: Object.keys(transformed).length > 0 ? transformed : { ...source, mapped: true },
+          transformed: res,
+          output: res,
+          ...res,
         };
       }
 

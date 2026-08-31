@@ -1,4 +1,4 @@
-import { WorkflowGraph, WorkflowNode, WorkflowEdge, PortDefinition } from "./workflow.js";
+import { WorkflowGraph, WorkflowNode, WorkflowEdge, PortDefinition, WorkflowTestCase } from "./workflow.js";
 import { validateDAG } from "../validator/dag.js";
 import { DynamicNodeRegistry } from "../nodes/dynamic.js";
 import { CredentialVault } from "../vault/vault.js";
@@ -40,18 +40,7 @@ export interface WorkflowSpecificationManifest {
     reference: string;
     description?: string;
   }>;
-  frozenTestCases: Array<{
-    id: string;
-    name: string;
-    inputPayload: Record<string, any>;
-    assertions: Array<{
-      targetNodeId?: string;
-      path: string;
-      operator: string;
-      expectedValue: any;
-      description?: string;
-    }>;
-  }>;
+  frozenTestCases: WorkflowTestCase[];
   contractSha256?: string;
   aiCodeGenerationInstructions: string;
 }
@@ -110,6 +99,15 @@ export function buildWorkflowSpecificationManifest(
           break;
         case "ai_agent":
           logicSummary = `Invoke AI LLM (${node.config.model || "gemini-2.5-flash"}) with system prompt: "${node.config.systemPrompt || ""}" and template: "${node.config.userPromptTemplate || "{{input}}"}"`;
+          break;
+        case "agent_handoff":
+          logicSummary = `Delegate task to secondary subagent role: ${node.config.subagentRole || "Subagent"}`;
+          break;
+        case "mcp_client_call":
+          logicSummary = `Invoke MCP server '${node.config.serverName}' tool '${node.config.toolName}' via ${node.config.transport || "sse"}`;
+          break;
+        case "mcp_server_tool":
+          logicSummary = `Expose workflow output as callable MCP tool schema '${node.config.exposedToolName}'`;
           break;
         case "condition_branch":
           logicSummary = `Evaluate boolean condition "${node.config.expression || "true"}". If truthy, emit to 'true_branch', otherwise emit to 'false_branch'.`;
